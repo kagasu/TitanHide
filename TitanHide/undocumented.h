@@ -543,6 +543,12 @@ public:
         IN SIZE_T MaximumStackSize OPTIONAL,
         IN PPS_ATTRIBUTE_LIST AttributeList OPTIONAL);
 
+    static NTSTATUS NTAPI NtOpenProcess(
+        PHANDLE            ProcessHandle,
+        ACCESS_MASK        DesiredAccess,
+        POBJECT_ATTRIBUTES ObjectAttributes,
+        PCLIENT_ID         ClientId);
+
     static bool UndocumentedInit();
     static PVOID GetKernelBase(PULONG pImageSize = NULL);
 };

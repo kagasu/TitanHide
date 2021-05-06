@@ -123,6 +123,13 @@ typedef NTSTATUS(NTAPI* NTTERMINATETHREAD)(
     IN NTSTATUS ExitStatus
 );
 
+typedef NTSTATUS(NTAPI* NTOPENPROCESS)(
+    PHANDLE            ProcessHandle,
+    ACCESS_MASK        DesiredAccess,
+    POBJECT_ATTRIBUTES ObjectAttributes,
+    PCLIENT_ID         ClientId
+);
+
 static ZWQUERYINFORMATIONPROCESS ZwQIP = 0;
 static NTQUERYINFORMATIONTHREAD NtQIT = 0;
 static NTQUERYOBJECT NtQO = 0;
@@ -140,6 +147,7 @@ static NTQUERYINFORMATIONPROCESS NtQIP = 0;
 static NTSYSTEMDEBUGCONTROL NtSDBC = 0;
 static NTCREATETHREADEX NtCrThrEx = 0;
 static NTTERMINATETHREAD NtTermThr = 0;
+static NTOPENPROCESS NtOpenThr = 0;
 
 NTSTATUS NTAPI Undocumented::ZwQueryInformationProcess(
     IN HANDLE ProcessHandle,
@@ -296,6 +304,15 @@ NTSTATUS NTAPI Undocumented::NtTerminateThread(
     return NtTermThr(ThreadHandle, ExitStatus);
 }
 
+NTSTATUS NTAPI Undocumented::NtOpenProcess(
+    PHANDLE            ProcessHandle,
+    ACCESS_MASK        DesiredAccess,
+    POBJECT_ATTRIBUTES ObjectAttributes,
+    PCLIENT_ID         ClientId)
+{
+    return NtOpenThr(ProcessHandle, DesiredAccess, ObjectAttributes, ClientId);
+}
+
 bool Undocumented::UndocumentedInit()
 {
     //Exported kernel functions after this
@@ -420,6 +437,12 @@ bool Undocumented::UndocumentedInit()
     {
         NtTermThr = (NTTERMINATETHREAD)SSDT::GetFunctionAddress("NtTerminateThread");
         if(!NtTermThr)
+            return false;
+    }
+    if (!NtOpenThr)
+    {
+        NtOpenThr = (NTOPENPROCESS)SSDT::GetFunctionAddress("NtOpenProcess");
+        if (!NtOpenThr)
             return false;
     }
     return true;

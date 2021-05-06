@@ -16,6 +16,7 @@ static HOOK hNtGetContextThread = 0;
 static HOOK hNtSetContextThread = 0;
 static HOOK hNtSystemDebugControl = 0;
 static HOOK hNtCreateThreadEx = 0;
+static HOOK hNtOpenProcess = 0;
 static KMUTEX gDebugPortMutex;
 
 //https://forum.tuts4you.com/topic/40011-debugme-vmprotect-312-build-886-anti-debug-method-improved/#comment-192824
@@ -641,6 +642,25 @@ static NTSTATUS NTAPI HookNtCreateThreadEx(
     return Undocumented::NtCreateThreadEx(ThreadHandle, DesiredAccess, ObjectAttributes, ProcessHandle, StartRoutine, Argument, CreateFlags, ZeroBits, StackSize, MaximumStackSize, AttributeList);
 }
 
+static NTSTATUS HookNtOpenProcess(
+    PHANDLE            ProcessHandle,
+    ACCESS_MASK        DesiredAccess,
+    POBJECT_ATTRIBUTES ObjectAttributes,
+    PCLIENT_ID         ClientId)
+{
+    UNREFERENCED_PARAMETER(ProcessHandle);
+    UNREFERENCED_PARAMETER(ObjectAttributes);
+
+    const ULONG targetPid = (ULONG)(ULONG_PTR)(ClientId->UniqueProcess);
+    if (Hider::IsHidden(targetPid, HideNtOpenProcess))
+    {
+        Log("[TITANHIDE] NtOpenProcess hide %u\r\n", targetPid);
+        DesiredAccess = 0x8; // PROCESS_VM_OPERATION
+    }
+
+    return Undocumented::NtOpenProcess(ProcessHandle, DesiredAccess, ObjectAttributes, ClientId);
+}
+
 int Hooks::Initialize()
 {
     KeInitializeMutex(&gDebugPortMutex, 0);
@@ -681,6 +701,10 @@ int Hooks::Initialize()
         if(hNtCreateThreadEx)
             hook_count++;
     }
+
+    hNtOpenProcess= SSDT::Hook("NtOpenProcess", (void*)HookNtOpenProcess);
+    if (hNtOpenProcess)
+        hook_count++;
     return hook_count;
 }
 
@@ -696,8 +720,11 @@ void Hooks::Deinitialize()
     SSDT::Unhook(hNtGetContextThread, true);
     SSDT::Unhook(hNtSetContextThread, true);
     SSDT::Unhook(hNtSystemDebugControl, true);
+
     if((NtBuildNumber & 0xFFFF) >= 6000)
     {
         SSDT::Unhook(hNtCreateThreadEx, true);
     }
+
+    SSDT::Unhook(hNtOpenProcess, true);
 }
