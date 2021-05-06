@@ -18,6 +18,7 @@ The idea for this project was thought of together with cypher, shoutout man!
 - SystemDebugControl (NtSystemDebugControl)
 - NtClose (STATUS_INVALID_HANDLE/STATUS_HANDLE_NOT_CLOSABLE exceptions)
 - ThreadHideFromDebugger (NtSetInformationThread)
+- Limit process access rights (NtOpenProcess)
 - Protect DRx (HW BPs) (NtGetContextThread/NtSetContextThread)
 
 # Test environments
