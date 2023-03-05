@@ -2,6 +2,9 @@
 
 void Log(const char* format, ...)
 {
+    UNREFERENCED_PARAMETER(format);
+
+    /*
     char msg[1024] = "";
     va_list vl;
     va_start(vl, format);
@@ -43,4 +46,5 @@ void Log(const char* format, ...)
             ZwWriteFile(handle, NULL, NULL, NULL, &ioStatusBlock, msg, (ULONG)cb, NULL, NULL);
         ZwClose(handle);
     }
+    */
 }
